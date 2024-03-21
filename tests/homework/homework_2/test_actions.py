@@ -1,8 +1,6 @@
-from random import randint
-
 import pytest
 
-from src.homework.homework_2.homework_2_1 import *
+from src.homework.homework_2.actions import *
 
 
 def create_test_cmd_storage(storage):
