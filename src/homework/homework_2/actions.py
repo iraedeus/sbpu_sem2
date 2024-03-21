@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from src.homework.homework_1.homework_1_1 import *
+from src.homework.homework_1.registry import *
 
 START_MESSAGE = (
     "This is a program for performing actions on a list of integers. Available commands: \n"
