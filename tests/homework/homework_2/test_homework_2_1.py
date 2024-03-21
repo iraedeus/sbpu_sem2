@@ -161,20 +161,122 @@ class TestActionFlip:
 
         assert cmd_storage.storage == expected
 
-    @pytest.mark.parametrize("storage, index, value", [([1, 2, 3], 100, 100), ([111, 5], 101, 100)])
-    def test_err_no_index(self, storage, index, value):
+    @pytest.mark.parametrize("storage, index", [([1, 2, 3], 100), ([111, 5], 101)])
+    def test_err_no_index(self, storage, index):
         cmd_storage = create_test_cmd_storage(storage)
         with pytest.raises(IndexError):
-            cmd_storage.apply(ActionAdd(index, value))
+            cmd_storage.apply(ActionFlip(index))
 
 
-class TestActionSquare: ...
+class TestActionSquare:
+    @pytest.mark.parametrize(
+        "storage, index, expected",
+        [([1, 5, 4, 3], 0, [1, 5, 4, 3]), ([1, 5, 4, 6, 7, 8, 3], 5, [1, 5, 4, 6, 7, 64, 3])],
+    )
+    def test_do(self, storage, index, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionSquare(index))
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize(
+        "storage, index, expected",
+        [([1, 5, 4, 3], 1, [1, 25, 4, 3]), ([1, 5, 4, 6, 7, 8, 3], 2, [1, 5, 16, 6, 7, 8, 3])],
+    )
+    def test_undo(self, storage, index, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionSquare(index))
+        cmd_storage.apply(action=ActionSquare(index))
+        cmd_storage.undo()
+
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize("storage, index", [([1, 2, 3], 100), ([111, 5], 101)])
+    def test_err_no_index(self, storage, index):
+        cmd_storage = create_test_cmd_storage(storage)
+        with pytest.raises(IndexError):
+            cmd_storage.apply(ActionSquare(index))
 
 
-class TestActionDeleteSlice: ...
+class TestActionDeleteSlice:
+    @pytest.mark.parametrize(
+        "storage, first_index, second_index, expected",
+        [([1, 5, 4, 3], 0, 1, [4, 3]), ([1, 5, 4, 6, 7, 8, 3], 0, 4, [8, 3])],
+    )
+    def test_do(self, storage, first_index, second_index, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionDeleteSlice(first_index, second_index))
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize(
+        "storage, first_index, second_index, expected",
+        [([1, 5, 4, 3], 0, 2, [1, 5, 4, 3]), ([1, 5, 4, 6, 7, 8, 3], 2, 5, [1, 5, 4, 6, 7, 8, 3])],
+    )
+    def test_undo(self, storage, first_index, second_index, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionDeleteSlice(first_index, second_index))
+        cmd_storage.undo()
+
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize("storage, first_index, second_index", [([1, 2, 3], 0, 100), ([111, 5], 1, 0)])
+    def test_err_no_index(self, storage, first_index, second_index):
+        cmd_storage = create_test_cmd_storage(storage)
+        with pytest.raises(IndexError):
+            cmd_storage.apply(ActionDeleteSlice(first_index, second_index))
 
 
-class TestActionPop: ...
+class TestActionPop:
+    @pytest.mark.parametrize(
+        "storage, index, expected",
+        [([1, 5, 4, 3], 0, [5, 4, 3]), ([1, 5, 4, 6, 7, 8, 3], 5, [1, 5, 4, 6, 7, 3])],
+    )
+    def test_do(self, storage, index, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionPop(index))
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize(
+        "storage, index, expected",
+        [([1, 5, 4, 3], 1, [1, 5, 4, 3]), ([1, 5, 4, 6, 7, 8, 3], 2, [1, 5, 4, 6, 7, 8, 3])],
+    )
+    def test_undo(self, storage, index, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionPop(index))
+        cmd_storage.undo()
+
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize("storage, index", [([1, 2, 3], 100), ([111, 5], 101)])
+    def test_err_no_index(self, storage, index):
+        cmd_storage = create_test_cmd_storage(storage)
+        with pytest.raises(IndexError):
+            cmd_storage.apply(ActionSquare(index))
 
 
-class TestActionMove: ...
+class TestActionMove:
+    @pytest.mark.parametrize(
+        "storage, step, expected",
+        [([1, 5, 4, 3], 0, [1, 5, 4, 3]), ([1, 5, 4, 6, 7, 8, 3], 5, [4, 6, 7, 8, 3, 1, 5])],
+    )
+    def test_do(self, storage, step, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionMove(step))
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize(
+        "storage, step, expected",
+        [([1, 5, 4, 3], 1, [3, 1, 5, 4]), ([1, 5, 4, 6, 7, 8, 3], 2, [8, 3, 1, 5, 4, 6, 7])],
+    )
+    def test_undo(self, storage, step, expected):
+        cmd_storage = create_test_cmd_storage(storage)
+        cmd_storage.apply(action=ActionMove(step))
+        cmd_storage.apply(action=ActionMove(step))
+        cmd_storage.undo()
+
+        assert cmd_storage.storage == expected
+
+    @pytest.mark.parametrize("storage, step", [([1, 2, 3], 100), ([111, 5], 101)])
+    def test_err_no_index(self, storage, step):
+        cmd_storage = create_test_cmd_storage(storage)
+        with pytest.raises(IndexError):
+            cmd_storage.apply(ActionSquare(step))

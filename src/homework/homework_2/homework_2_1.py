@@ -15,7 +15,7 @@ START_MESSAGE = (
     "9) Pop --index (Delete element by index) \n"
     "10) Move --step (Move all elements to the right by step)"
     "11) Undo (Undo last action) \n"
-    "12) ShowList (Print your list in console) \n"
+    "12) Show (Print your list in console) \n"
     "13) Exit (Exit the program)"
 )
 ACTIONS = Registry["Action"](default=None)
@@ -54,8 +54,8 @@ class PerformedCommandStorage:
         self.storage: list[int] = storage
 
     def apply(self, action: "Action") -> None:
-        self.history.put(action)
         action.do(self)
+        self.history.put(action)
 
     def undo(self) -> None:
         if self.history.head is None:
@@ -182,6 +182,14 @@ class ActionDeleteSlice(Action):
         self.deleted_slice: list[int] = []
 
     def do(self, command_storage: PerformedCommandStorage) -> None:
+        if not (
+            (0 <= self.first_index < len(command_storage.storage))
+            and (0 <= self.second_index < len(command_storage.storage))
+        ):
+            raise IndexError("Index out of range")
+        if self.first_index > self.second_index:
+            raise IndexError("First index must be less or equal then second index")
+
         self.deleted_slice = command_storage.storage[self.first_index : self.second_index + 1]
         command_storage.storage = (
             command_storage.storage[: self.first_index] + command_storage.storage[self.second_index + 1 :]
@@ -227,9 +235,7 @@ class ActionMove(Action):
             return None
 
         length = len(command_storage.storage)
-        command_storage.storage = (
-            command_storage.storage[length - self.step :] + command_storage.storage[: length - self.step]
-        )
+        command_storage.storage = command_storage.storage[self.step :] + command_storage.storage[: self.step]
 
 
 def parse_args(user_command: str) -> tuple[str, list[Any]]:
